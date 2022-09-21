@@ -1,0 +1,18 @@
+{
+  "appId": "org.council.wherenau",
+  "appName": "Wherenau",
+  "bundledWebRuntime": false,
+  "npmClient": "yarn",
+  "webDir": "www",
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": true,
+      "androidScaleType": "CENTER_CROP",
+      "splashFullScreen": true,
+      "splashImmersive": true
+    }
+  },
+  "server": {
+    "url": "http://192.168.18.68:9500"
+  }
+}
