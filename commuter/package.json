@@ -15,6 +15,7 @@
     "@types/leaflet": "^1.8.0",
     "axios": "^0.21.1",
     "leaflet": "^1.8.0",
+    "maplibre-gl": "^2.4.0",
     "pinia": "^2.0.11",
     "postcss": "^8.4.16",
     "quasar": "^2.6.0",
