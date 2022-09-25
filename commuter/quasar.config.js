@@ -69,7 +69,11 @@ module.exports = configure(function (/* ctx */) {
       // polyfillModulePreload: true,
       // distDir
 
-      // extendViteConf (viteConf) {},
+      extendViteConf(viteConf) {
+        viteConf.optimizeDeps = {
+          exclude: ['@capacitor/core'],
+        };
+      },
       // viteVuePluginOptions: {},
 
       // vitePlugins: [
