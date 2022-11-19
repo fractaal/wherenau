@@ -6,6 +6,37 @@
       class="h-[100vh] w-[100vw] top-0"
       style="position: fixed !important"
     ></div>
+    <q-linear-progress class="fixed" indeterminate v-if="findingLocation" />
+
+    <div ref="drawerEl" class="max-h-[100vh] overflow-y-scroll">
+      <div class="h-[80vh]"></div>
+      <q-card
+        class="relative p-4 mx-8 pb-32 rounded-t-3xl shadow-xl border-2 border-gray-200 bg-[#ffffffbb] backdrop-blur-sm pt-6"
+      >
+        <div
+          class="relative text-h6 font-black tracking-tighter p-4"
+          v-ripple
+          @click="toggleDrawer"
+        >
+          PUVs
+        </div>
+        <div
+          v-for="puvs in puvLocationProvider.puvs.value"
+          :key="puvs.plateNumber"
+        >
+          <div
+            v-ripple
+            class="relative border-2 border-gray-200 my-2 p-4 rounded-xl bg-[#ffffffbb]"
+          >
+            <div class="font-black text-lg -my-1">{{ puvs.name }}</div>
+            <div class="tracking-wider text-xs text-gray-500">
+              {{ puvs.plateNumber }}
+            </div>
+          </div>
+        </div>
+      </q-card>
+    </div>
+
     <q-page-sticky position="bottom" :offset="[0, 100]">
       <Transition name="bounce">
         <q-item
@@ -46,20 +77,116 @@
 
 <script setup lang="ts">
 import 'maplibre-gl/dist/maplibre-gl.css';
-import maplibregl from 'maplibre-gl';
-import { watch, ref } from 'vue';
+import maplibregl, { LngLatLike } from 'maplibre-gl';
+import { watch, ref, computed } from 'vue';
 import { useQuasar } from 'quasar';
-import { Geolocation } from '@capacitor/geolocation';
 import { useStore } from 'src/stores/global-store';
 import ThemeSelectorDialog from 'src/components/ThemeSelectorDialog.vue';
 import { easeInOutExpo } from 'src/util/ease-in-out-expo';
+import {
+  GeolocationPlugin,
+  WatchPositionCallback,
+} from '@capacitor/geolocation';
+import {
+  geolocation as Geolocation,
+  type as providerType,
+} from 'src/api/location';
+import Position from 'src/models/Position';
+import { PUVLocationProvider } from 'src/models/PUVLocationProvider';
+import { useMockPUVLocationProvider } from 'src/api/mock/MockPUVLocationProvider';
 
 const store = useStore();
 const $q = useQuasar();
-
-const location = ref({ lng: 0, lat: 0 });
+const drawerEl = ref<HTMLElement | null>(null);
+const location = ref<Position>({ lng: null, lat: null });
 const toastVisible = ref(false);
 const toastText = ref('');
+const mapEl = ref<HTMLElement | null>(null);
+
+const puvLocationProvider: PUVLocationProvider = useMockPUVLocationProvider();
+
+let noLocationLockYet = true;
+let map: maplibregl.Map | null = null;
+let userMarker: maplibregl.Marker | null = null;
+
+const puvMarkers: Record<string, maplibregl.Marker> = {};
+
+watch(
+  puvLocationProvider.puvs,
+  (puvs) => {
+    puvs.forEach((puv) => {
+      const markerId = `puv-${puv.plateNumber.replaceAll(' ', '')}`;
+
+      if (puvMarkers[markerId] === null || puvMarkers[markerId] === undefined) {
+        const el = document.createElement('div');
+        el.id = markerId;
+        el.style.height = '64px';
+        el.style.width = '64px';
+
+        el.style.borderRadius = '32px';
+        el.style.border = '5px solid black';
+        el.style.backgroundColor = '#ff00ff';
+
+        puvMarkers[markerId] = new maplibregl.Marker(el);
+        puvMarkers[markerId].addTo(map!);
+
+        console.log('created', el);
+      }
+
+      // if (puv.location.lat !== null && puv.location.lng !== null) {
+      //   puvMarkers[markerId].setLngLat({
+      //     lng: puv.location.lng,
+      //     lat: puv.location.lat,
+      //   });
+      // }
+    });
+  },
+  { deep: true }
+);
+
+// TODO: Fix issues with the recenter location function
+const toggleDrawer = (
+  _: PointerEvent | null,
+  force = false,
+  expand?: boolean
+) => {
+  if (drawerEl.value == null) {
+    console.warn('cannot expand drawer: is null');
+    return;
+  }
+
+  if (force) {
+    drawerEl.value.scrollBy({
+      top: expand ? drawerEl.value.scrollHeight : 0,
+      behavior: 'smooth',
+    });
+  } else {
+    drawerEl.value.scrollBy({
+      top:
+        drawerEl.value.scrollTop > 0
+          ? -drawerEl.value.scrollTop
+          : drawerEl.value.scrollHeight,
+      behavior: 'smooth',
+    });
+  }
+
+  drawerEl.value.scrollBy({
+    top: (() => {
+      if (force) {
+        return expand ? drawerEl.value.scrollHeight : 0;
+      } else {
+        return drawerEl.value.scrollTop > 0
+          ? -drawerEl.value.scrollTop
+          : drawerEl.value.scrollHeight;
+      }
+    })(),
+    behavior: 'smooth',
+  });
+};
+
+const findingLocation = computed(() => {
+  return location.value.lng === null || location.value.lat === null;
+});
 
 const showToast = (text: string, duration = 1000) => {
   toastVisible.value = true;
@@ -69,25 +196,30 @@ const showToast = (text: string, duration = 1000) => {
   }, duration);
 };
 
-let noLocationLockYet = true;
+showToast('LOOKING FOR YOU...');
+const LocationCallback = (position: GeolocationPosition) => {
+  if (position !== null) {
+    location.value = {
+      lat: position.coords.latitude,
+      lng: position.coords.longitude,
+    };
+  }
+};
 
-if ($q.platform.is.capacitor) {
-  showToast('LOOKING FOR YOU...');
-  (async () => {
-    Geolocation.watchPosition({ enableHighAccuracy: true }, (position) => {
-      if (position !== null) {
-        location.value = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        };
-      }
+(async () => {
+  await new Promise((r) => setTimeout(r, 2500));
+  if (providerType === 'capacitor') {
+    (Geolocation as GeolocationPlugin).watchPosition(
+      { enableHighAccuracy: true },
+      LocationCallback as unknown as WatchPositionCallback
+    );
+  } else {
+    console.log(providerType, Geolocation);
+    (Geolocation as Geolocation).watchPosition(LocationCallback, () => {
+      showToast('FAILED TO GET YOUR LOCATION');
     });
-  })();
-}
-
-const mapEl = ref<HTMLElement | null>(null);
-let map: maplibregl.Map | null = null;
-let userMarker: maplibregl.Marker | null = null;
+  }
+})();
 
 watch(
   () => store.currentTheme,
@@ -103,7 +235,7 @@ watch(location, (newLocation) => {
     showToast('FOUND YOUR LOCATION');
     setTimeout(() => {
       map?.easeTo({
-        center: newLocation,
+        center: newLocation as unknown as LngLatLike,
         zoom: 15,
         animate: true,
         duration: 1500,
@@ -112,7 +244,8 @@ watch(location, (newLocation) => {
     }, 2500);
     noLocationLockYet = false;
   }
-  userMarker?.setLngLat(newLocation);
+  userMarker?.setLngLat(newLocation as unknown as LngLatLike);
+  userMarker?.getElement().classList.add('enter');
 });
 
 watch(mapEl, (newMapEl) => {
@@ -137,8 +270,9 @@ watch(mapEl, (newMapEl) => {
 
 const recenter = () => {
   showToast('RECENTER LOCATION');
+  toggleDrawer(null, true, false);
   map?.easeTo({
-    center: location.value,
+    center: location.value as unknown as LngLatLike,
     zoom: 15,
     animate: true,
     duration: 1000,
@@ -146,7 +280,7 @@ const recenter = () => {
     bearing: 0,
     easing: easeInOutExpo,
   });
-  userMarker?.setLngLat(location.value);
+  userMarker?.setLngLat(location.value as unknown as LngLatLike);
 };
 
 const changeTheme = () => {

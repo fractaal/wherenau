@@ -1,8 +1,8 @@
 // app global css in SCSS form
-@import url('https://fonts.googleapis.com/css?family=Overpass:ital,wght@0,300;0,400;0,600;0,700;0,800;1,800&display=swap');
+@import url('https://fonts.googleapis.com/css?family=Roboto+Mono:ital,wght@0,300;0,400;0,600;0,700;0,800;1,800&display=swap');
 
 * {
-    font-family: Overpass;
+    font-family: "Roboto Mono";
 }
 
 .user-location {
@@ -10,6 +10,24 @@ background-image: url("/LocationMarker.svg");
   background-size: cover;
   height: 32px;
   width: 32px;
+}
+
+.enter {
+  animation: enter 1s cubic-bezier(1, 0, 0, 1);
+}
+
+@keyframes enter {
+  0% {
+    filter: opacity(0);
+    height: 128px;
+    width: 128px;
+  }
+
+  100% {
+    filter: opacity(1);
+    height: 32px;
+    width: 32px;
+  }
 }
 
 .bounce-enter-active {

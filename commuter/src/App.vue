@@ -3,8 +3,18 @@
 </template>
 
 <script setup lang="ts">
-import { StatusBar, Style } from '@capacitor/status-bar';
-import { Notify } from 'quasar';
+import { useQuasar } from 'quasar';
 
-StatusBar.setOverlaysWebView({ overlay: true });
+const $q = useQuasar();
+
+// if (process.env.MODE === 'capacitor') {
+//   console.log("why am i doing this? i'm not a a capacitor app.");
+//   import('@capacitor/status-bar').then((x) => {
+//     x.StatusBar.setOverlaysWebView({ overlay: true });
+//   });
+
+//   import('@hugotomazi/capacitor-navigation-bar').then((x) => {
+//     x.NavigationBar.setTransparency({ isTransparent: true });
+//   });
+// }
 </script>

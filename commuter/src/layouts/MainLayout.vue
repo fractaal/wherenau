@@ -1,6 +1,9 @@
 <template>
   <q-layout view="lHh Lpr lFf">
-    <q-header class="bg-[#ffffff55] backdrop-blur-sm pt-6">
+    <q-header
+      class="bg-[#ffffff55] backdrop-blur-sm"
+      :class="$q.platform.is.capacitor ? 'pt-6' : ''"
+    >
       <q-toolbar>
         <q-toolbar-title
           :class="
