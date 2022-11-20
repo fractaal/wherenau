@@ -1,9 +1,15 @@
-import { GeolocationPlugin } from '@capacitor/geolocation';
 import { PUV } from 'src/models/PUV';
 import { VehicleType } from 'src/models/PUV';
 import { PUVLocationProvider } from 'src/models/PUVLocationProvider';
-import { computed, ComputedRef, ref } from 'vue';
-import { geolocation as Geolocation, type as providerType } from '../location';
+import { computed, ref, UnwrapNestedRefs } from 'vue';
+import { LocationProvider } from 'src/models/LocationProvider';
+import Position from 'src/models/Position';
+
+declare module 'src/models/PUV' {
+  interface PUV {
+    __mockDirection: number;
+  }
+}
 
 const names = [
   'Kauro',
@@ -33,6 +39,7 @@ export const generateRandom = (): PUV => {
       lng: -1,
       lat: -1,
     },
+    __mockDirection: 0,
   };
 };
 
@@ -54,64 +61,47 @@ const generateRandomPlateNumber = () => {
 };
 
 // TODO: fix everything
-export const useMockPUVLocationProvider: () => PUVLocationProvider = () => {
-  const currentLocation = ref<{ lng: number | null; lat: number | null }>({
-    lng: null,
-    lat: null,
-  });
-
-  if (providerType === 'capacitor') {
-    (Geolocation as GeolocationPlugin).watchPosition(
-      { enableHighAccuracy: true },
-      (position) => {
-        if (position === null) {
-          return;
-        }
-        currentLocation.value = {
-          lng: position.coords.longitude,
-          lat: position.coords.latitude,
-        };
-      }
-    );
-  } else if (providerType === 'fallback') {
-    (Geolocation as Geolocation).watchPosition((position) => {
-      if (position === null) {
-        return;
-      }
-      currentLocation.value = {
-        lng: position.coords.longitude,
-        lat: position.coords.latitude,
-      };
-    });
-  }
-
+export const useMockPUVLocationProvider: (
+  locationProvider: UnwrapNestedRefs<LocationProvider>
+) => PUVLocationProvider = (
+  locationProvider: UnwrapNestedRefs<LocationProvider>
+) => {
   const puvs = ref<PUV[]>([]);
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 100; i++) {
     puvs.value.push(generateRandom());
   }
 
   let firstFoundLocation = true;
+
   setInterval(() => {
-    if (currentLocation.value.lng === null) {
+    if (locationProvider.location === null) {
       return;
     }
+
+    const location = locationProvider.location as Position;
+
+    console.log('mock update');
+
     if (firstFoundLocation) {
       firstFoundLocation = false;
       puvs.value.forEach((puv) => {
         puv.location = {
-          lng: currentLocation.value.lng,
-          lat: currentLocation.value.lat,
+          lng: location.lng,
+          lat: location.lat,
         };
+        puv.__mockDirection = Math.random() * 360;
       });
     }
+
     puvs.value.forEach((puv) => {
-      if (puv.location.lng === null || puv.location.lat === null) {
-        return;
-      }
-      puv.location.lat += (Math.random() - 0.5) * 0.001;
-      puv.location.lng += (Math.random() - 0.5) * 0.001;
+      puv.location.lat +=
+        Math.sin(puv.__mockDirection) * (Math.random() + 1) * 0.0001;
+      puv.location.lng +=
+        Math.cos(puv.__mockDirection) * (Math.random() + 1) * 0.0001;
+
+      puv.__mockDirection += Math.random();
     });
-  }, 200);
+  }, 2500);
 
   return {
     puvs: computed(() => puvs.value),

@@ -2,14 +2,23 @@
 @import url('https://fonts.googleapis.com/css?family=Roboto+Mono:ital,wght@0,300;0,400;0,600;0,700;0,800;1,800&display=swap');
 
 * {
-    font-family: "Roboto Mono";
+  font-family: 'Roboto Mono';
 }
 
 .user-location {
-background-image: url("/LocationMarker.svg");
+  background-image: url('/LocationMarker.svg');
   background-size: cover;
   height: 32px;
   width: 32px;
+}
+
+.puv-location {
+  // background-image: url('/LocationMarker.svg');
+  // -webkit-mask-image: url('/LocationMarker.svg');
+  mask-image: url('/LocationMarker.svg');
+  background-size: cover;
+  height: 24px;
+  width: 24px;
 }
 
 .enter {
@@ -47,7 +56,6 @@ background-image: url("/LocationMarker.svg");
     transform: scale(1);
   }
 }
-
 
 @tailwind base;
 @tailwind components;

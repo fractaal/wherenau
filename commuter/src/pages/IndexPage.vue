@@ -6,7 +6,11 @@
       class="h-[100vh] w-[100vw] top-0"
       style="position: fixed !important"
     ></div>
-    <q-linear-progress class="fixed" indeterminate v-if="findingLocation" />
+    <q-linear-progress
+      class="fixed"
+      indeterminate
+      v-if="store.locationProvider.findingLocation"
+    />
 
     <div ref="drawerEl" class="max-h-[100vh] overflow-y-scroll">
       <div class="h-[80vh]"></div>
@@ -78,35 +82,28 @@
 <script setup lang="ts">
 import 'maplibre-gl/dist/maplibre-gl.css';
 import maplibregl, { LngLatLike } from 'maplibre-gl';
-import { watch, ref, computed } from 'vue';
+import { watch, ref, Ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useStore } from 'src/stores/global-store';
 import ThemeSelectorDialog from 'src/components/ThemeSelectorDialog.vue';
 import { easeInOutExpo } from 'src/util/ease-in-out-expo';
-import {
-  GeolocationPlugin,
-  WatchPositionCallback,
-} from '@capacitor/geolocation';
-import {
-  geolocation as Geolocation,
-  type as providerType,
-} from 'src/api/location';
-import Position from 'src/models/Position';
 import { PUVLocationProvider } from 'src/models/PUVLocationProvider';
 import { useMockPUVLocationProvider } from 'src/api/mock/MockPUVLocationProvider';
+import { animateMarker } from 'src/util/animation';
 
 const store = useStore();
 const $q = useQuasar();
 const drawerEl = ref<HTMLElement | null>(null);
-const location = ref<Position>({ lng: null, lat: null });
 const toastVisible = ref(false);
 const toastText = ref('');
 const mapEl = ref<HTMLElement | null>(null);
 
-const puvLocationProvider: PUVLocationProvider = useMockPUVLocationProvider();
+const puvLocationProvider: PUVLocationProvider = useMockPUVLocationProvider(
+  store.locationProvider
+);
 
 let noLocationLockYet = true;
-let map: maplibregl.Map | null = null;
+let map: Ref<maplibregl.Map | null> = ref(null);
 let userMarker: maplibregl.Marker | null = null;
 
 const puvMarkers: Record<string, maplibregl.Marker> = {};
@@ -120,25 +117,28 @@ watch(
       if (puvMarkers[markerId] === null || puvMarkers[markerId] === undefined) {
         const el = document.createElement('div');
         el.id = markerId;
-        el.style.height = '64px';
-        el.style.width = '64px';
 
-        el.style.borderRadius = '32px';
-        el.style.border = '5px solid black';
-        el.style.backgroundColor = '#ff00ff';
+        el.classList.add('puv-location');
+        el.style.backgroundColor = 'red';
 
-        puvMarkers[markerId] = new maplibregl.Marker(el);
-        puvMarkers[markerId].addTo(map!);
+        puvMarkers[markerId] = new maplibregl.Marker(el, {
+          anchor: 'center',
+          offset: [0, 5],
+        });
+        puvMarkers[markerId].setLngLat([puv.location.lng, puv.location.lat]);
 
-        console.log('created', el);
+        if (map.value != null) {
+          puvMarkers[markerId].addTo(map.value);
+        } else {
+          console.log('Map seems to be null!');
+        }
+      } else {
+        // puvMarkers[markerId].setLngLat([puv.location.lng, puv.location.lat]);
+        animateMarker(puvMarkers[markerId], {
+          lng: puv.location.lng,
+          lat: puv.location.lat,
+        });
       }
-
-      // if (puv.location.lat !== null && puv.location.lng !== null) {
-      //   puvMarkers[markerId].setLngLat({
-      //     lng: puv.location.lng,
-      //     lat: puv.location.lat,
-      //   });
-      // }
     });
   },
   { deep: true }
@@ -184,10 +184,6 @@ const toggleDrawer = (
   });
 };
 
-const findingLocation = computed(() => {
-  return location.value.lng === null || location.value.lat === null;
-});
-
 const showToast = (text: string, duration = 1000) => {
   toastVisible.value = true;
   toastText.value = text;
@@ -196,61 +192,40 @@ const showToast = (text: string, duration = 1000) => {
   }, duration);
 };
 
-showToast('LOOKING FOR YOU...');
-const LocationCallback = (position: GeolocationPosition) => {
-  if (position !== null) {
-    location.value = {
-      lat: position.coords.latitude,
-      lng: position.coords.longitude,
-    };
-  }
-};
-
-(async () => {
-  await new Promise((r) => setTimeout(r, 2500));
-  if (providerType === 'capacitor') {
-    (Geolocation as GeolocationPlugin).watchPosition(
-      { enableHighAccuracy: true },
-      LocationCallback as unknown as WatchPositionCallback
-    );
-  } else {
-    console.log(providerType, Geolocation);
-    (Geolocation as Geolocation).watchPosition(LocationCallback, () => {
-      showToast('FAILED TO GET YOUR LOCATION');
-    });
-  }
-})();
-
 watch(
   () => store.currentTheme,
   (newTheme) => {
-    map?.setStyle(
+    map.value?.setStyle(
       `https://api.maptiler.com/maps/${newTheme.toLowerCase()}/style.json?key=Yl9AIE6LEkM0JpoPK8rU`
     );
   }
 );
 
-watch(location, (newLocation) => {
-  if (noLocationLockYet) {
-    showToast('FOUND YOUR LOCATION');
-    setTimeout(() => {
-      map?.easeTo({
-        center: newLocation as unknown as LngLatLike,
-        zoom: 15,
-        animate: true,
-        duration: 1500,
-        easing: easeInOutExpo,
-      });
-    }, 2500);
-    noLocationLockYet = false;
+watch(
+  () => store.locationProvider.location,
+  (newLocation) => {
+    console.log('FOUND LOCATION', newLocation);
+    if (noLocationLockYet) {
+      showToast('FOUND YOUR LOCATION');
+      setTimeout(() => {
+        map.value?.easeTo({
+          center: newLocation as unknown as LngLatLike,
+          zoom: 15,
+          animate: true,
+          duration: 1500,
+          easing: easeInOutExpo,
+        });
+      }, 2500);
+      noLocationLockYet = false;
+    }
+    userMarker?.setLngLat(newLocation as unknown as LngLatLike);
+    userMarker?.getElement().classList.add('enter');
   }
-  userMarker?.setLngLat(newLocation as unknown as LngLatLike);
-  userMarker?.getElement().classList.add('enter');
-});
+);
 
 watch(mapEl, (newMapEl) => {
   if (!newMapEl) return;
-  map = new maplibregl.Map({
+  map.value = new maplibregl.Map({
     container: newMapEl,
     style: `https://api.maptiler.com/maps/${store.currentTheme.toLowerCase()}/style.json?key=Yl9AIE6LEkM0JpoPK8rU`,
     center: [123.2209922, 11.9448032],
@@ -258,21 +233,21 @@ watch(mapEl, (newMapEl) => {
     attributionControl: false,
   });
 
-  map.addControl(new maplibregl.AttributionControl(), 'bottom-left');
+  map.value?.addControl(new maplibregl.AttributionControl(), 'bottom-left');
 
   const userMarkerEl = document.createElement('div');
   userMarkerEl.classList.add('user-location');
 
   userMarker = new maplibregl.Marker(userMarkerEl)
     .setLngLat([30.5, 50.5])
-    .addTo(map);
+    .addTo(map.value);
 });
 
 const recenter = () => {
   showToast('RECENTER LOCATION');
   toggleDrawer(null, true, false);
-  map?.easeTo({
-    center: location.value as unknown as LngLatLike,
+  map.value?.easeTo({
+    center: store.locationProvider.location!,
     zoom: 15,
     animate: true,
     duration: 1000,
@@ -280,7 +255,7 @@ const recenter = () => {
     bearing: 0,
     easing: easeInOutExpo,
   });
-  userMarker?.setLngLat(location.value as unknown as LngLatLike);
+  userMarker?.setLngLat(store.locationProvider.location!);
 };
 
 const changeTheme = () => {

@@ -1,4 +1,4 @@
 export default interface Position {
-  lng: number | null;
-  lat: number | null;
+  lng: number;
+  lat: number;
 }
