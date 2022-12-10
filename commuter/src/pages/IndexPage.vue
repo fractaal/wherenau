@@ -84,12 +84,12 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import maplibregl, { LngLatLike } from 'maplibre-gl';
 import { watch, ref, Ref } from 'vue';
 import { useQuasar } from 'quasar';
-import { useStore } from 'src/stores/global-store';
 import ThemeSelectorDialog from 'src/components/ThemeSelectorDialog.vue';
 import { easeInOutExpo } from 'src/util/ease-in-out-expo';
 import { PUVLocationProvider } from 'src/models/PUVLocationProvider';
 import { useMockPUVLocationProvider } from 'src/api/mock/MockPUVLocationProvider';
 import { animateMarker } from 'src/util/animation';
+import { useLocationProvider } from 'src/api/LocationProvider';
 
 const store = useStore();
 const $q = useQuasar();
@@ -98,9 +98,9 @@ const toastVisible = ref(false);
 const toastText = ref('');
 const mapEl = ref<HTMLElement | null>(null);
 
-const puvLocationProvider: PUVLocationProvider = useMockPUVLocationProvider(
-  store.locationProvider
-);
+const locationProvider = useLocationProvider();
+const puvLocationProvider: PUVLocationProvider =
+  useMockPUVLocationProvider(locationProvider);
 
 let noLocationLockYet = true;
 let map: Ref<maplibregl.Map | null> = ref(null);
@@ -119,7 +119,6 @@ watch(
         el.id = markerId;
 
         el.classList.add('puv-location');
-        el.style.backgroundColor = 'red';
 
         puvMarkers[markerId] = new maplibregl.Marker(el, {
           anchor: 'center',
