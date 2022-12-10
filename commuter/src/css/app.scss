@@ -13,9 +13,10 @@
 }
 
 .puv-location {
-  // background-image: url('/LocationMarker.svg');
+  background-image: url('/LocationMarker.svg');
   // -webkit-mask-image: url('/LocationMarker.svg');
-  mask-image: url('/LocationMarker.svg');
+  // mask-image: url('/LocationMarker.svg');
+  // background-color: red;
   background-size: cover;
   height: 24px;
   width: 24px;
