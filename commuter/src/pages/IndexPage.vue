@@ -15,14 +15,14 @@
     <div ref="drawerEl" class="max-h-[100vh] overflow-y-scroll">
       <div class="h-[80vh]"></div>
       <q-card
-        class="relative p-4 mx-8 pb-32 rounded-t-3xl shadow-xl border-2 border-gray-200 bg-[#ffffffbb] backdrop-blur-sm pt-6"
+        class="lg:w-1/2 relative p-4 mx-8 lg:mx-auto pb-32 rounded-t-3xl shadow-xl border-2 border-gray-200 bg-[#ffffffbb] backdrop-blur-sm pt-6"
       >
         <div
           class="relative text-h6 font-black tracking-tighter p-4"
           v-ripple
           @click="toggleDrawer"
         >
-          PUVs
+          PUV Name
         </div>
         <div
           v-for="puvs in puvLocationProvider.puvs.value"
@@ -33,6 +33,7 @@
             class="relative border-2 border-gray-200 my-2 p-4 rounded-xl bg-[#ffffffbb]"
           >
             <div class="font-black text-lg -my-1">{{ puvs.name }}</div>
+            <q-badge>{{ puvs.route.toUpperCase() }}</q-badge>
             <div class="tracking-wider text-xs text-gray-500">
               {{ puvs.plateNumber }}
             </div>
