@@ -1,7 +1,7 @@
 <template>
   <q-layout view="lHh Lpr lFf">
     <q-header
-      class="bg-[#ffffff55] backdrop-blur-sm"
+      class="bg-[#ffffff55] backdrop-blur-sm border-2 border-gray-200"
       :class="$q.platform.is.capacitor ? 'pt-6' : ''"
     >
       <q-toolbar>
