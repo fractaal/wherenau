@@ -39,6 +39,7 @@ export const generateRandom = (): PUV => {
       lng: -1,
       lat: -1,
     },
+    route: 'Bugo - Gaisano Mall - Capistrano - Divisoria',
     __mockDirection: 0,
   };
 };
@@ -67,7 +68,7 @@ export const useMockPUVLocationProvider: (
   locationProvider: UnwrapNestedRefs<LocationProvider>
 ) => {
   const puvs = ref<PUV[]>([]);
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < 10; i++) {
     puvs.value.push(generateRandom());
   }
 
