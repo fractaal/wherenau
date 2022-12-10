@@ -6,7 +6,7 @@ import {
 import {
   geolocation as Geolocation,
   type as providerType,
-} from 'src/api/location';
+} from 'src/api/Location';
 
 import Position from 'src/models/Position';
 import { computed, ref } from 'vue';
@@ -49,3 +49,14 @@ export const useLocationProvider = () => {
     test,
   };
 };
+
+let defaultLocationProvider: ReturnType<typeof useLocationProvider> | null =
+  null;
+
+export function useDefaultLocationProvider() {
+  if (defaultLocationProvider === null) {
+    defaultLocationProvider = useLocationProvider();
+  }
+
+  return defaultLocationProvider;
+}

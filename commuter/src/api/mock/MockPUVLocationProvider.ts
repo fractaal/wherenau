@@ -63,10 +63,8 @@ const generateRandomPlateNumber = () => {
 
 // TODO: fix everything
 export const useMockPUVLocationProvider: (
-  locationProvider: UnwrapNestedRefs<LocationProvider>
-) => PUVLocationProvider = (
-  locationProvider: UnwrapNestedRefs<LocationProvider>
-) => {
+  locationProvider: LocationProvider
+) => PUVLocationProvider = (locationProvider: LocationProvider) => {
   const puvs = ref<PUV[]>([]);
   for (let i = 0; i < 10; i++) {
     puvs.value.push(generateRandom());
@@ -79,7 +77,7 @@ export const useMockPUVLocationProvider: (
       return;
     }
 
-    const location = locationProvider.location as Position;
+    const location = locationProvider.location.value as Position;
 
     console.log('mock update');
 
@@ -108,3 +106,18 @@ export const useMockPUVLocationProvider: (
     puvs: computed(() => puvs.value),
   };
 };
+
+let defaultMockPUVLocationProvider: ReturnType<
+  typeof useMockPUVLocationProvider
+> | null = null;
+
+export function useDefaultMockPUVLocationProvider(
+  locationProvider: LocationProvider
+) {
+  if (defaultMockPUVLocationProvider === null) {
+    defaultMockPUVLocationProvider =
+      useMockPUVLocationProvider(locationProvider);
+  }
+
+  return defaultMockPUVLocationProvider;
+}
