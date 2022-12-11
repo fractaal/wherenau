@@ -5,6 +5,7 @@ export interface PUV {
   type: VehicleType;
   plateNumber: string;
   route: string;
+  image: string;
   location: {
     lng: number;
     lat: number;

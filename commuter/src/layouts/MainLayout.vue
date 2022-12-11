@@ -26,14 +26,19 @@
       </q-toolbar>
     </q-header>
     <q-drawer v-model="leftDrawerOpen" side="left" bordered :width="500">
-      <div class="flex mx-6 font-black text-2xl mt-12 -mb-4 tracking-tighter">
-        <div class="mr-2 mt-0.5 relative h-6 w-6 bg-blue-400 rounded-full">
+      <q-skeleton animation="wave" class="h-16 rounded-none">
+        <div class="flex mx-6 font-black text-2xl -mb-4 tracking-tighter">
           <div
-            class="animate-ping absolute h-6 w-6 bg-blue-400 rounded-full"
-          ></div>
+            class="mr-2 mt-[0.3rem] relative h-4 w-4 bg-blue-400 rounded-full"
+          >
+            <div
+              class="animate-ping absolute h-4 w-4 bg-blue-400 rounded-full"
+            ></div>
+          </div>
+          TRACKED PUVs
         </div>
-        TRACKED PUVs
-      </div>
+      </q-skeleton>
+
       <div class="mx-6">
         <div
           v-for="puvs in puvLocationProvider.puvs.value"
@@ -49,7 +54,11 @@
             @click="puvSelector.selectPUV(puvs)"
           >
             <div class="font-black text-lg -my-1">{{ puvs.name }}</div>
-            <q-badge>{{ puvs.route.toUpperCase() }}</q-badge>
+            <div
+              class="p-[0.3rem] bg-blue-400 rounded-md text-white text-xs inline-block my-1"
+            >
+              {{ puvs.route.toUpperCase() }}
+            </div>
             <div
               class="tracking-wider text-xs text-gray-500"
               :class="{

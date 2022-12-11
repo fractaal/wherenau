@@ -15,18 +15,51 @@
     <div ref="drawerEl" class="max-h-[100vh] overflow-y-scroll">
       <div class="h-[80vh]"></div>
       <transition name="bottom-drawer-transition">
-        <q-card
-          class="lg:w-1/2 relative p-4 mx-8 lg:mx-auto pb-32 rounded-t-3xl shadow-xl border-2 border-gray-200 bg-[#ffffffbb] backdrop-blur-sm pt-6"
+        <div
+          class="lg:w-1/2 relative p-4 mx-8 lg:mx-auto pb-16 rounded-t-3xl shadow-xl border-2 border-gray-200 bg-[#ffffffbb] backdrop-blur-sm pt-6"
           v-if="puvSelector.selectedPUV.value !== null"
         >
           <div
-            class="relative text-h6 font-black tracking-tighter p-4"
+            class="relative text-h6 font-black tracking-tighter p-4 rounded-xl"
             v-ripple
             @click="toggleDrawer"
           >
-            PUV Name
+            {{ puvSelector.selectedPUV.value.name }}
           </div>
-        </q-card>
+          <div class="mx-4 mb-4">
+            <q-img
+              :src="puvSelector.selectedPUV.value.image"
+              height="150px"
+              class="bg-gray-200 rounded-xl"
+            >
+            </q-img>
+          </div>
+          <div class="grid grid-cols-2">
+            <div class="flex mx-4 flex-shrink bg-gray-100 rounded-xl p-4">
+              <div class="text-gray-500">PLATE NUMBER &nbsp;</div>
+              <div class="font-black">
+                {{ puvSelector.selectedPUV.value.plateNumber }}
+              </div>
+            </div>
+            <div class="flex mx-4 flex-shrink bg-gray-100 rounded-xl p-4">
+              <div class="text-gray-500">DISTANCE &nbsp;</div>
+              <div
+                class="font-black"
+                v-if="locationProvider.location.value !== null"
+              >
+                {{
+                  formatNumber(
+                    distanceBetweenCoordinates(
+                      locationProvider.location.value,
+                      puvSelector.selectedPUV.value.location
+                    )
+                  )
+                }}m
+              </div>
+              <div class="font-black" v-else>UNAVAILABLE</div>
+            </div>
+          </div>
+        </div>
       </transition>
     </div>
 
@@ -71,15 +104,21 @@
 <script setup lang="ts">
 import 'maplibre-gl/dist/maplibre-gl.css';
 import maplibregl, { LngLatLike } from 'maplibre-gl';
-import { watch, ref, Ref } from 'vue';
+import { watch, ref, Ref, WatchStopHandle } from 'vue';
 import { useQuasar } from 'quasar';
 import ThemeSelectorDialog from 'src/components/ThemeSelectorDialog.vue';
 import { easeInOutExpo } from 'src/util/ease-in-out-expo';
 import { PUVLocationProvider } from 'src/models/PUVLocationProvider';
-import { useMockPUVLocationProvider } from 'src/api/mock/MockPUVLocationProvider';
+import { useDefaultMockPUVLocationProvider } from 'src/api/mock/MockPUVLocationProvider';
 import { animateMarker } from 'src/util/animation';
 import { useLocationProvider } from 'src/api/LocationProvider';
 import { useDefaultPUVSelector } from 'src/api/PUVSelection';
+
+import { distanceBetweenCoordinates } from 'src/util/distance';
+import formatNumber from 'src/util/formatNumber';
+
+import createMarkerElement from 'src/util/create-marker-element';
+
 import themes from 'src/api/ThemeStore';
 
 const puvSelector = useDefaultPUVSelector();
@@ -91,13 +130,20 @@ const mapEl = ref<HTMLElement | null>(null);
 
 const locationProvider = useLocationProvider();
 const puvLocationProvider: PUVLocationProvider =
-  useMockPUVLocationProvider(locationProvider);
+  useDefaultMockPUVLocationProvider(locationProvider);
 
 let noLocationLockYet = true;
 let map: Ref<maplibregl.Map | null> = ref(null);
 let userMarker: maplibregl.Marker | null = null;
 
 const puvMarkers: Record<string, maplibregl.Marker> = {};
+
+setInterval(() => {
+  if (map.value) {
+    console.log('resizing');
+    map.value.resize();
+  }
+}, 500);
 
 watch(
   puvLocationProvider.puvs,
@@ -106,15 +152,15 @@ watch(
       const markerId = `puv-${puv.plateNumber.replaceAll(' ', '')}`;
 
       if (puvMarkers[markerId] === null || puvMarkers[markerId] === undefined) {
-        const el = document.createElement('div');
-        el.id = markerId;
+        const el = createMarkerElement();
+        el.marker.id = markerId;
 
-        el.classList.add('puv-location');
-
-        puvMarkers[markerId] = new maplibregl.Marker(el, {
+        puvMarkers[markerId] = new maplibregl.Marker(el.marker, {
           anchor: 'center',
           offset: [0, 5],
         });
+        puvMarkers[markerId].__marker = el;
+
         puvMarkers[markerId].setLngLat([puv.location.lng, puv.location.lat]);
 
         if (map.value != null) {
@@ -124,6 +170,26 @@ watch(
         }
       } else {
         // puvMarkers[markerId].setLngLat([puv.location.lng, puv.location.lat]);
+        if (puvSelector.selectedPUV.value !== null) {
+          console.log(
+            markerId,
+            `puv-${puvSelector.selectedPUV.value.plateNumber.replaceAll(
+              ' ',
+              ''
+            )}`
+          );
+          if (
+            markerId ===
+            `puv-${puvSelector.selectedPUV.value.plateNumber.replaceAll(
+              ' ',
+              ''
+            )}`
+          ) {
+            puvMarkers[markerId].__marker.changeColor('#fc6203');
+          } else {
+            puvMarkers[markerId].__marker.changeColor('#472ab0');
+          }
+        }
         animateMarker(puvMarkers[markerId], {
           lng: puv.location.lng,
           lat: puv.location.lat,
@@ -133,6 +199,41 @@ watch(
   },
   { deep: true }
 );
+
+let positionWatcher: WatchStopHandle | null = null;
+watch(puvSelector.selectedPUV, (value) => {
+  if (value === null) {
+    positionWatcher?.();
+    recenter(false);
+    return;
+  }
+
+  map.value?.easeTo({
+    center: value.location,
+    zoom: 18,
+    // easing: easeInOutExpo,
+  });
+
+  positionWatcher = watch(
+    () => puvSelector.selectedPUV.value?.location,
+    (val) => {
+      if (val === null) {
+        return;
+      }
+
+      map.value?.easeTo({
+        center: val,
+        zoom: 18,
+        easing: easeInOutExpo,
+      });
+    },
+    { deep: true }
+  );
+
+  setTimeout(() => {
+    toggleDrawer(null, true, true);
+  }, 250);
+});
 
 // TODO: Fix issues with the recenter location function
 const toggleDrawer = (
@@ -233,8 +334,10 @@ watch(mapEl, (newMapEl) => {
     .addTo(map.value);
 });
 
-const recenter = () => {
-  showToast('RECENTER LOCATION');
+const recenter = (toast = true) => {
+  if (toast) {
+    showToast('RECENTER LOCATION');
+  }
 
   if (locationProvider.location.value == null) {
     console.warn('Cannot recenter: location is null');

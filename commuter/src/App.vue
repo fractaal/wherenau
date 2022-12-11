@@ -5,8 +5,6 @@
 <script setup lang="ts">
 import { useQuasar } from 'quasar';
 
-const $q = useQuasar();
-
 // if (process.env.MODE === 'capacitor') {
 //   console.log("why am i doing this? i'm not a a capacitor app.");
 //   import('@capacitor/status-bar').then((x) => {
