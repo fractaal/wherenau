@@ -16,25 +16,25 @@
 
 <script setup lang="ts">
 import { useDialogPluginComponent } from 'quasar';
-import { useStore } from 'src/stores/global-store';
 import { ref, watch } from 'vue';
-
-const store = useStore();
+import ThemeStore from 'src/api/ThemeStore';
 
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } =
   useDialogPluginComponent();
 
-const currentTheme = ref(store.currentTheme);
+const currentTheme = ref(ThemeStore.currentTheme);
 const themes = ['Voyager', 'DarkMatter', 'Positron', 'Bright', 'Basic'];
 
 watch(currentTheme, (newCurrentTheme) => {
-  store.changeTheme(newCurrentTheme);
+  ThemeStore.changeTheme(newCurrentTheme);
 });
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const onOKClick = () => {
   onDialogOK();
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const onCancelClick = () => {
   onDialogCancel();
 };

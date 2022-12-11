@@ -9,37 +9,25 @@
     <q-linear-progress
       class="fixed"
       indeterminate
-      v-if="store.locationProvider.findingLocation"
+      v-if="locationProvider.findingLocation.value"
     />
 
     <div ref="drawerEl" class="max-h-[100vh] overflow-y-scroll">
       <div class="h-[80vh]"></div>
-      <q-card
-        class="lg:w-1/2 relative p-4 mx-8 lg:mx-auto pb-32 rounded-t-3xl shadow-xl border-2 border-gray-200 bg-[#ffffffbb] backdrop-blur-sm pt-6"
-      >
-        <div
-          class="relative text-h6 font-black tracking-tighter p-4"
-          v-ripple
-          @click="toggleDrawer"
-        >
-          PUV Name
-        </div>
-        <div
-          v-for="puvs in puvLocationProvider.puvs.value"
-          :key="puvs.plateNumber"
+      <transition name="bottom-drawer-transition">
+        <q-card
+          class="lg:w-1/2 relative p-4 mx-8 lg:mx-auto pb-32 rounded-t-3xl shadow-xl border-2 border-gray-200 bg-[#ffffffbb] backdrop-blur-sm pt-6"
+          v-if="puvSelector.selectedPUV.value !== null"
         >
           <div
+            class="relative text-h6 font-black tracking-tighter p-4"
             v-ripple
-            class="relative border-2 border-gray-200 my-2 p-4 rounded-xl bg-[#ffffffbb]"
+            @click="toggleDrawer"
           >
-            <div class="font-black text-lg -my-1">{{ puvs.name }}</div>
-            <q-badge>{{ puvs.route.toUpperCase() }}</q-badge>
-            <div class="tracking-wider text-xs text-gray-500">
-              {{ puvs.plateNumber }}
-            </div>
+            PUV Name
           </div>
-        </div>
-      </q-card>
+        </q-card>
+      </transition>
     </div>
 
     <q-page-sticky position="bottom" :offset="[0, 100]">
@@ -91,8 +79,10 @@ import { PUVLocationProvider } from 'src/models/PUVLocationProvider';
 import { useMockPUVLocationProvider } from 'src/api/mock/MockPUVLocationProvider';
 import { animateMarker } from 'src/util/animation';
 import { useLocationProvider } from 'src/api/LocationProvider';
+import { useDefaultPUVSelector } from 'src/api/PUVSelection';
+import themes from 'src/api/ThemeStore';
 
-const store = useStore();
+const puvSelector = useDefaultPUVSelector();
 const $q = useQuasar();
 const drawerEl = ref<HTMLElement | null>(null);
 const toastVisible = ref(false);
@@ -193,7 +183,7 @@ const showToast = (text: string, duration = 1000) => {
 };
 
 watch(
-  () => store.currentTheme,
+  () => themes.currentTheme.value,
   (newTheme) => {
     map.value?.setStyle(
       `https://api.maptiler.com/maps/${newTheme.toLowerCase()}/style.json?key=Yl9AIE6LEkM0JpoPK8rU`
@@ -202,7 +192,7 @@ watch(
 );
 
 watch(
-  () => store.locationProvider.location,
+  () => locationProvider.location.value,
   (newLocation) => {
     console.log('FOUND LOCATION', newLocation);
     if (noLocationLockYet) {
@@ -227,7 +217,7 @@ watch(mapEl, (newMapEl) => {
   if (!newMapEl) return;
   map.value = new maplibregl.Map({
     container: newMapEl,
-    style: `https://api.maptiler.com/maps/${store.currentTheme.toLowerCase()}/style.json?key=Yl9AIE6LEkM0JpoPK8rU`,
+    style: `https://api.maptiler.com/maps/${themes.currentTheme.value.toLowerCase()}/style.json?key=Yl9AIE6LEkM0JpoPK8rU`,
     center: [123.2209922, 11.9448032],
     zoom: 5,
     attributionControl: false,
@@ -245,9 +235,15 @@ watch(mapEl, (newMapEl) => {
 
 const recenter = () => {
   showToast('RECENTER LOCATION');
+
+  if (locationProvider.location.value == null) {
+    console.warn('Cannot recenter: location is null');
+    return;
+  }
+
   toggleDrawer(null, true, false);
   map.value?.easeTo({
-    center: store.locationProvider.location!,
+    center: locationProvider.location.value,
     zoom: 15,
     animate: true,
     duration: 1000,
@@ -255,7 +251,7 @@ const recenter = () => {
     bearing: 0,
     easing: easeInOutExpo,
   });
-  userMarker?.setLngLat(store.locationProvider.location!);
+  userMarker?.setLngLat(locationProvider.location.value);
 };
 
 const changeTheme = () => {

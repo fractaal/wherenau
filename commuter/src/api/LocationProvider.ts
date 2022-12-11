@@ -8,6 +8,8 @@ import {
   type as providerType,
 } from 'src/api/Location';
 
+import { Notify } from 'quasar';
+
 import Position from 'src/models/Position';
 import { computed, ref } from 'vue';
 
@@ -37,7 +39,7 @@ export const useLocationProvider = () => {
     } else {
       console.log(providerType, Geolocation);
       (Geolocation as Geolocation).watchPosition(LocationCallback, () => {
-        console.log('Failed to get location');
+        Notify.create({ type: 'error', message: 'Unable to get location' });
       });
     }
   })();

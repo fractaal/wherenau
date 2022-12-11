@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 // app global css in SCSS form
 @import url('https://fonts.googleapis.com/css?family=Overpass:ital,wght@0,300;0,400;0,600;0,700;0,800;1,800&display=swap');
 
@@ -40,6 +44,22 @@
   }
 }
 
+.bottom-drawer-transition-enter-to,
+.bottom-drawer-transition-leave-from {
+  transform: translateY(0);
+}
+
+.bottom-drawer-transition-enter-active,
+.bottom-drawer-transition-leave-active {
+  transition: all 0.25s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.bottom-drawer-transition-enter-from,
+.bottom-drawer-transition-leave-to {
+  transform: translateY(50%);
+  opacity: 0;
+}
+
 .bounce-enter-active {
   animation: bounce-in 0.5s;
 }
@@ -58,6 +78,13 @@
   }
 }
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@keyframes scale-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}

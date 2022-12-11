@@ -1,7 +1,7 @@
 import { PUV } from 'src/models/PUV';
 import { VehicleType } from 'src/models/PUV';
 import { PUVLocationProvider } from 'src/models/PUVLocationProvider';
-import { computed, ref, UnwrapNestedRefs } from 'vue';
+import { computed, ref } from 'vue';
 import { LocationProvider } from 'src/models/LocationProvider';
 import Position from 'src/models/Position';
 
@@ -73,7 +73,7 @@ export const useMockPUVLocationProvider: (
   let firstFoundLocation = true;
 
   setInterval(() => {
-    if (locationProvider.location === null) {
+    if (locationProvider.location.value === null) {
       return;
     }
 

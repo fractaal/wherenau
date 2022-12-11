@@ -1,7 +1,7 @@
 <template>
   <q-layout view="lHh Lpr lFf">
     <q-header
-      class="bg-[#ffffff55] backdrop-blur-sm border-2 border-gray-200"
+      class="bg-[#ffffff55] backdrop-blur-sm border-b-2 border-gray-200"
       :class="$q.platform.is.capacitor ? 'pt-6' : ''"
     >
       <q-toolbar>
@@ -15,7 +15,7 @@
         />
         <q-toolbar-title
           :class="
-            store.currentTheme.toLowerCase().includes('dark')
+            themes.currentTheme.value.toLowerCase().includes('dark')
               ? 'text-white'
               : 'text-black'
           "
@@ -26,6 +26,52 @@
       </q-toolbar>
     </q-header>
     <q-drawer v-model="leftDrawerOpen" side="left" bordered :width="500">
+      <div class="flex mx-6 font-black text-2xl mt-12 -mb-4 tracking-tighter">
+        <div class="mr-2 mt-0.5 relative h-6 w-6 bg-blue-400 rounded-full">
+          <div
+            class="animate-ping absolute h-6 w-6 bg-blue-400 rounded-full"
+          ></div>
+        </div>
+        TRACKED PUVs
+      </div>
+      <div class="mx-6">
+        <div
+          v-for="puvs in puvLocationProvider.puvs.value"
+          :key="puvs.plateNumber"
+        >
+          <div
+            v-ripple
+            class="relative border-2 border-gray-200 my-6 p-4 rounded-xl"
+            :class="{
+              'bg-blue-500 text-white': puvSelector.selectedPUV.value === puvs,
+              'bg-[#ffffffbb]': puvSelector.selectedPUV.value !== puvs,
+            }"
+            @click="puvSelector.selectPUV(puvs)"
+          >
+            <div class="font-black text-lg -my-1">{{ puvs.name }}</div>
+            <q-badge>{{ puvs.route.toUpperCase() }}</q-badge>
+            <div
+              class="tracking-wider text-xs text-gray-500"
+              :class="{
+                'text-gray-500': puvSelector.selectedPUV.value !== puvs,
+                'text-white': puvSelector.selectedPUV.value === puvs,
+              }"
+            >
+              {{ puvs.plateNumber }}
+            </div>
+            <div v-if="locationProvider.location.value != null">
+              {{
+                formatNumber(
+                  distanceBetweenCoordinates(
+                    locationProvider.location.value,
+                    puvs.location
+                  )
+                )
+              }}m away
+            </div>
+          </div>
+        </div>
+      </div>
     </q-drawer>
     <q-page-container class="">
       <router-view />
@@ -34,9 +80,17 @@
 </template>
 
 <script setup lang="ts">
-import { useStore } from 'src/stores/global-store';
+import themes from 'src/api/ThemeStore';
+import { useDefaultLocationProvider } from 'src/api/LocationProvider';
+import { useDefaultMockPUVLocationProvider } from 'src/api/mock/MockPUVLocationProvider';
+import { distanceBetweenCoordinates } from 'src/util/distance';
+import formatNumber from 'src/util/formatNumber';
 import { ref } from 'vue';
+import { useDefaultPUVSelector } from 'src/api/PUVSelection';
 
-let leftDrawerOpen = ref(false);
-const store = useStore();
+const puvSelector = useDefaultPUVSelector();
+const locationProvider = useDefaultLocationProvider();
+const puvLocationProvider = useDefaultMockPUVLocationProvider(locationProvider);
+
+let leftDrawerOpen = ref(true);
 </script>
