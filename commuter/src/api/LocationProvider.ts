@@ -21,6 +21,7 @@ export const useLocationProvider = () => {
 
   // showToast('LOOKING FOR YOU...');
   const LocationCallback = (position: GeolocationPosition) => {
+    Notify.create({ message: 'update' });
     if (position !== null) {
       location.value = {
         lat: position.coords.latitude,
@@ -38,8 +39,11 @@ export const useLocationProvider = () => {
       );
     } else {
       console.log(providerType, Geolocation);
-      (Geolocation as Geolocation).watchPosition(LocationCallback, () => {
-        Notify.create({ type: 'error', message: 'Unable to get location' });
+      (Geolocation as Geolocation).watchPosition(LocationCallback, (err) => {
+        Notify.create({
+          type: 'error',
+          message: 'Unable to get location: ' + err.message,
+        });
       });
     }
   })();

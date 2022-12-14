@@ -101,6 +101,12 @@
           icon="fas fa-rocket"
           @click="$router.push('/driver')"
         />
+        <q-fab-action
+          flat
+          class="bg-white text-black shadow-xl"
+          icon="fas fa-right-from-bracket"
+          @click="signOut"
+        />
         <!-- <q-fab-action color="white" text-color="black" icon="alarm" /> -->
       </q-fab>
     </q-page-sticky>
@@ -110,7 +116,7 @@
 <script setup lang="ts">
 import 'maplibre-gl/dist/maplibre-gl.css';
 import maplibregl, { LngLatLike } from 'maplibre-gl';
-import { watch, ref, Ref, WatchStopHandle } from 'vue';
+import { watch, ref, Ref, WatchStopHandle, computed } from 'vue';
 import { useQuasar } from 'quasar';
 import ThemeSelectorDialog from 'src/components/ThemeSelectorDialog.vue';
 import { easeInOutExpo } from 'src/util/ease-in-out-expo';
@@ -119,13 +125,34 @@ import { useDefaultMockPUVLocationProvider } from 'src/api/mock/MockPUVLocationP
 import { animateMarker } from 'src/util/animation';
 import { useLocationProvider } from 'src/api/LocationProvider';
 import { useDefaultPUVSelector } from 'src/api/PUVSelection';
-
 import { distanceBetweenCoordinates } from 'src/util/distance';
 import formatNumber from 'src/util/formatNumber';
-
 import createMarkerElement from 'src/util/create-marker-element';
-
 import themes from 'src/api/ThemeStore';
+import { useFirebaseLocationProvider } from 'src/api/FirebasePUVLocationProvider';
+
+import { getAuth } from '@firebase/auth';
+
+const auth = getAuth();
+
+const userIsPresent = computed(() => auth.currentUser !== null);
+
+const signOut = async () => {
+  try {
+    await auth.signOut();
+    $q.notify({
+      type: 'positive',
+      message: 'Signed out',
+      position: 'top',
+    });
+  } catch (err) {
+    $q.notify({
+      type: 'negative',
+      message: 'Failed to sign out',
+      position: 'top',
+    });
+  }
+};
 
 const puvSelector = useDefaultPUVSelector();
 const $q = useQuasar();
@@ -135,21 +162,13 @@ const toastText = ref('');
 const mapEl = ref<HTMLElement | null>(null);
 
 const locationProvider = useLocationProvider();
-const puvLocationProvider: PUVLocationProvider =
-  useDefaultMockPUVLocationProvider(locationProvider);
+const puvLocationProvider: PUVLocationProvider = useFirebaseLocationProvider();
 
 let noLocationLockYet = true;
 let map: Ref<maplibregl.Map | null> = ref(null);
 let userMarker: maplibregl.Marker | null = null;
 
 const puvMarkers: Record<string, maplibregl.Marker> = {};
-
-setInterval(() => {
-  if (map.value) {
-    console.log('resizing');
-    map.value.resize();
-  }
-}, 500);
 
 watch(
   puvLocationProvider.puvs,

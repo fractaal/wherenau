@@ -25,7 +25,8 @@
         </q-toolbar-title>
       </q-toolbar>
     </q-header>
-    <q-drawer v-model="leftDrawerOpen" side="left" bordered :width="500">
+    <q-drawer v-model="leftDrawerOpen" side="left" bordered>
+      <div class="mt-10"></div>
       <q-skeleton animation="wave" class="h-16 rounded-none">
         <div class="flex mx-6 font-black text-2xl -mb-4 tracking-tighter">
           <div
@@ -91,7 +92,11 @@
       </div>
     </q-drawer>
     <q-page-container class="">
-      <router-view />
+      <router-view v-slot="{ Component }">
+        <keep-alive>
+          <component :is="Component" />
+        </keep-alive>
+      </router-view>
     </q-page-container>
   </q-layout>
 </template>
@@ -99,7 +104,7 @@
 <script setup lang="ts">
 import themes from 'src/api/ThemeStore';
 import { useDefaultLocationProvider } from 'src/api/LocationProvider';
-import { useDefaultMockPUVLocationProvider } from 'src/api/mock/MockPUVLocationProvider';
+import { useFirebaseLocationProvider } from 'src/api/FirebasePUVLocationProvider';
 import { distanceBetweenCoordinates } from 'src/util/distance';
 import formatNumber from 'src/util/formatNumber';
 import { ref } from 'vue';
@@ -107,7 +112,7 @@ import { useDefaultPUVSelector } from 'src/api/PUVSelection';
 
 const puvSelector = useDefaultPUVSelector();
 const locationProvider = useDefaultLocationProvider();
-const puvLocationProvider = useDefaultMockPUVLocationProvider(locationProvider);
+const puvLocationProvider = useFirebaseLocationProvider();
 
 let leftDrawerOpen = ref(true);
 </script>
