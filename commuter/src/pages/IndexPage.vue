@@ -210,7 +210,7 @@ watch(puvSelector.selectedPUV, (value) => {
 
   map.value?.easeTo({
     center: value.location,
-    zoom: 18,
+    zoom: 16,
     // easing: easeInOutExpo,
   });
 

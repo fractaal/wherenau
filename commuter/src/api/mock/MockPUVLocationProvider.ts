@@ -104,8 +104,8 @@ export const useMockPUVLocationProvider: (
       firstFoundLocation = false;
       puvs.value.forEach((puv) => {
         puv.location = {
-          lng: location.lng,
-          lat: location.lat,
+          lng: location.lng + Math.random() * 0.02 - 0.01,
+          lat: location.lat + Math.random() * 0.02 - 0.01,
         };
         puv.__mockDirection = Math.random() * 360;
       });
