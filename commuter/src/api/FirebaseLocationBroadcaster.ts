@@ -41,24 +41,16 @@ const _useLocationBroadcaster = (
     //
   };
 
-  if (auth.currentUser) {
-    const db = getFirestore();
-    const driverRef = doc(collection(db, 'drivers'), auth.currentUser.uid);
+  (async () => {
+    while (!auth.currentUser) {
+      await new Promise((r) => setTimeout(r, 1000));
+    }
 
-    forceBroadcast = () => {
-      setDoc(
-        driverRef,
-        {
-          location: locationProvider.location.value,
-        },
-        { merge: true }
-      );
-      lastBroadcast.value = new Date();
-    };
+    if (auth.currentUser) {
+      const db = getFirestore();
+      const driverRef = doc(collection(db, 'drivers'), auth.currentUser.uid);
 
-    // Update location in ref when location changes
-    setInterval(() => {
-      if (broadcast.value) {
+      forceBroadcast = () => {
         setDoc(
           driverRef,
           {
@@ -66,19 +58,33 @@ const _useLocationBroadcaster = (
           },
           { merge: true }
         );
-
         lastBroadcast.value = new Date();
-      } else {
-        setDoc(
-          driverRef,
-          {
-            location: null,
-          },
-          { merge: true }
-        );
-      }
-    }, 5000);
-  }
+      };
+
+      // Update location in ref when location changes
+      setInterval(() => {
+        if (broadcast.value) {
+          setDoc(
+            driverRef,
+            {
+              location: locationProvider.location.value,
+            },
+            { merge: true }
+          );
+
+          lastBroadcast.value = new Date();
+        } else {
+          setDoc(
+            driverRef,
+            {
+              location: null,
+            },
+            { merge: true }
+          );
+        }
+      }, 5000);
+    }
+  })();
 
   return {
     broadcast,

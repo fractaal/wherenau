@@ -356,10 +356,10 @@ watch(mapEl, (newMapEl) => {
 
   map.value?.addControl(new maplibregl.AttributionControl(), 'bottom-left');
 
-  const userMarkerEl = document.createElement('div');
-  userMarkerEl.classList.add('user-location');
+  const userMarkerEl = createMarkerElement();
+  userMarkerEl.changeColor('#6FA9FF');
 
-  userMarker = new maplibregl.Marker(userMarkerEl)
+  userMarker = new maplibregl.Marker(userMarkerEl.marker)
     .setLngLat([30.5, 50.5])
     .addTo(map.value);
 });

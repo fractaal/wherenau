@@ -114,5 +114,5 @@ const puvSelector = useDefaultPUVSelector();
 const locationProvider = useDefaultLocationProvider();
 const puvLocationProvider = useFirebaseLocationProvider();
 
-let leftDrawerOpen = ref(true);
+let leftDrawerOpen = ref(false);
 </script>

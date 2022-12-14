@@ -20,9 +20,7 @@
       <div
         class="font-black flex items-center border-2 p-4 rounded-xl"
         :class="driverConfig.broadcastPosition ? 'bg-blue-500 text-white' : ''"
-        @click="
-          driverConfig.broadcastPosition = !driverConfig.broadcastPosition
-        "
+        @click="toggleBroadcast"
         v-ripple
       >
         <q-icon name="fas fa-satellite-dish" size="48px" />
@@ -132,6 +130,32 @@ const $q = useQuasar();
 const locationProvider = useDefaultLocationProvider();
 let _locationBroadcaster = useFirebaseLocationBroadcaster(locationProvider);
 
+const toggleBroadcast = () => {
+  if (!driverConfig.value.broadcastPosition) {
+    let anyConfigParametersMissing = false;
+
+    for (const key in driverConfig.value) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      //@ts-ignore
+      if (driverConfig.value[key] === '') {
+        anyConfigParametersMissing = true;
+        break;
+      }
+    }
+
+    if (anyConfigParametersMissing) {
+      $q.notify({
+        message: 'Please fill in all the fields',
+        color: 'negative',
+        position: 'top',
+      });
+      return;
+    }
+  }
+  // _locationBroadcaster.broadcast.value = !_locationBroadcaster.broadcast.value;
+  driverConfig.value.broadcastPosition = !driverConfig.value.broadcastPosition;
+};
+
 const driverConfig = ref({
   broadcastPosition: false,
   plateNumber: '',
@@ -156,6 +180,7 @@ auth.onAuthStateChanged(async (user) => {
       async (newDriverConfig) => {
         console.log("Updating driver's config");
         status.value = 'updating';
+
         await setDoc(driverConfigRef, newDriverConfig, { merge: true });
         status.value = 'idle';
 
