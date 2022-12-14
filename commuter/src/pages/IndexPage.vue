@@ -70,7 +70,7 @@
                   )
                 }}m
               </div>
-              <div class="font-black" v-else>UNAVAILABLE</div>
+              <div class="font-black text-xs" v-else>UNAVAILABLE</div>
             </div>
           </div>
         </div>
