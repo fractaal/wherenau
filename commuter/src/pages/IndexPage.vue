@@ -48,7 +48,7 @@
             <div
               class="flex flex-shrink bg-gray-100 rounded-xl p-4 flex-nowrap"
             >
-              <div class="text-gray-500 text-xs">PLATE NUMBER &nbsp;</div>
+              <div class="text-gray-500 text-xs">PLATE NO. &nbsp;</div>
               <div class="font-black text-xs">
                 {{ puvSelector.selectedPUV.value.plateNumber }}
               </div>

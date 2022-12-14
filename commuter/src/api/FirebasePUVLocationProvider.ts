@@ -13,6 +13,16 @@ export const useFirebaseLocationProvider = (): PUVLocationProvider => {
   return singleton;
 };
 
+const defaultPUVValues = {
+  name: 'None',
+  type: 'Jeep',
+  plateNumber: '000-000',
+  route: 'None',
+  image: 'None',
+  location: null,
+  color: '#000000',
+};
+
 const _useFirebasePUVLocationProvider = (): PUVLocationProvider => {
   const puvs = ref<PUV[]>([]);
 
@@ -22,12 +32,14 @@ const _useFirebasePUVLocationProvider = (): PUVLocationProvider => {
   (async () => {
     // Listen to realtime updates
     onSnapshot(drivers, (querySnapshot) => {
-      const _ = querySnapshot.docs.map((doc) => {
-        return {
-          id: doc.id,
-          ...doc.data(),
-        } as unknown as PUV;
-      });
+      const _ = querySnapshot.docs.map(
+        (doc) =>
+          ({
+            ...defaultPUVValues,
+            id: doc.id,
+            ...doc.data(),
+          } as unknown as PUV)
+      );
 
       puvs.value = _.filter(
         (puv) =>
