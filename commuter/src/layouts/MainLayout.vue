@@ -36,7 +36,7 @@
               class="animate-ping absolute h-4 w-4 bg-blue-400 rounded-full"
             ></div>
           </div>
-          TRACKED PUVs
+          TRACKED PUJs
         </div>
       </q-skeleton>
 
