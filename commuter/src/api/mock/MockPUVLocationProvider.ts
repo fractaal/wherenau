@@ -59,6 +59,7 @@ export const generateRandom = (): PUV => {
     },
     image: images[Math.round(Math.random() * images.length)],
     route: 'Bugo - Gaisano Mall - Capistrano - Divisoria',
+    color: '#' + Math.floor(Math.random() * 16777215).toString(16),
     __mockDirection: 0,
   };
 };

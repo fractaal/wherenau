@@ -95,6 +95,12 @@
           icon="fas fa-paint-brush"
           @click="changeTheme"
         />
+        <q-fab-action
+          flat
+          class="bg-white text-black shadow-xl"
+          icon="fas fa-rocket"
+          @click="$router.push('/driver')"
+        />
         <!-- <q-fab-action color="white" text-color="black" icon="alarm" /> -->
       </q-fab>
     </q-page-sticky>
@@ -155,6 +161,8 @@ watch(
         const el = createMarkerElement();
         el.marker.id = markerId;
 
+        el.changeColor(puv.color);
+
         puvMarkers[markerId] = new maplibregl.Marker(el.marker, {
           anchor: 'center',
           offset: [0, 5],
@@ -169,15 +177,7 @@ watch(
           console.log('Map seems to be null!');
         }
       } else {
-        // puvMarkers[markerId].setLngLat([puv.location.lng, puv.location.lat]);
         if (puvSelector.selectedPUV.value !== null) {
-          console.log(
-            markerId,
-            `puv-${puvSelector.selectedPUV.value.plateNumber.replaceAll(
-              ' ',
-              ''
-            )}`
-          );
           if (
             markerId ===
             `puv-${puvSelector.selectedPUV.value.plateNumber.replaceAll(
@@ -187,7 +187,7 @@ watch(
           ) {
             puvMarkers[markerId].__marker.changeColor('#fc6203');
           } else {
-            puvMarkers[markerId].__marker.changeColor('#472ab0');
+            puvMarkers[markerId].__marker.changeColor(puv.color);
           }
         }
         animateMarker(puvMarkers[markerId], {

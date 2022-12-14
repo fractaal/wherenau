@@ -53,7 +53,15 @@
             }"
             @click="puvSelector.selectPUV(puvs)"
           >
-            <div class="font-black text-lg -my-1">{{ puvs.name }}</div>
+            <div class="flex">
+              <div
+                class="-mt-1 h-6 w-6 rounded-full border mr-2"
+                :style="{
+                  backgroundColor: puvs.color,
+                }"
+              ></div>
+              <div class="font-black text-lg -my-1">{{ puvs.name }}</div>
+            </div>
             <div
               class="p-[0.3rem] bg-blue-400 rounded-md text-white text-xs inline-block my-1"
             >

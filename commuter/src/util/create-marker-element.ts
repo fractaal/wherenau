@@ -27,6 +27,7 @@ export default function createMarkerElement() {
   innerElement.style.transform = 'translate(-50%, -50%)';
 
   function changeColor(color: string) {
+    console.log('color changed to ' + color);
     innerElement.style.backgroundColor = color;
   }
 

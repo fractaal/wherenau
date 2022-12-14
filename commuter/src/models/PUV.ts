@@ -10,4 +10,5 @@ export interface PUV {
     lng: number;
     lat: number;
   };
+  color: string;
 }
