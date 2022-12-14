@@ -198,7 +198,11 @@ auth.onAuthStateChanged(async (user) => {
 
     locationBroadcaster.broadcast.value = driverConfig.value.broadcastPosition;
   } else {
-    router.push('/login');
+    router.back();
+    $q.notify({
+      type: 'negative',
+      message: 'You are not logged in. Please log in first!',
+    });
     // const provider = new GoogleAuthProvider();
 
     // (async () => {

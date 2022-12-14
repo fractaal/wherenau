@@ -34,14 +34,28 @@
             >
             </q-img>
           </div>
-          <div class="grid grid-cols-2">
-            <div class="flex mx-4 flex-shrink bg-gray-100 rounded-xl p-4">
+          <div class="grid grid-cols-1 mb-4 mx-4">
+            <div
+              class="bg-gray-100 rounded-xl p-4 flex flex-shrink flex-nowrap"
+            >
+              <div class="text-gray-500">ROUTE &nbsp;</div>
+              <div class="font-black">
+                {{ puvSelector.selectedPUV.value.route }}
+              </div>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4 mx-4">
+            <div
+              class="flex flex-shrink bg-gray-100 rounded-xl p-4 flex-nowrap"
+            >
               <div class="text-gray-500">PLATE NUMBER &nbsp;</div>
               <div class="font-black">
                 {{ puvSelector.selectedPUV.value.plateNumber }}
               </div>
             </div>
-            <div class="flex mx-4 flex-shrink bg-gray-100 rounded-xl p-4">
+            <div
+              class="flex flex-shrink bg-gray-100 rounded-xl p-4 flex-nowrap"
+            >
               <div class="text-gray-500">DISTANCE &nbsp;</div>
               <div
                 class="font-black"
@@ -104,8 +118,8 @@
         <q-fab-action
           flat
           class="bg-white text-black shadow-xl"
-          icon="fas fa-right-from-bracket"
-          @click="signOut"
+          icon="fas fa-user"
+          @click="$router.push('/login')"
         />
         <!-- <q-fab-action color="white" text-color="black" icon="alarm" /> -->
       </q-fab>
@@ -135,24 +149,7 @@ import { getAuth } from '@firebase/auth';
 
 const auth = getAuth();
 
-const userIsPresent = computed(() => auth.currentUser !== null);
-
-const signOut = async () => {
-  try {
-    await auth.signOut();
-    $q.notify({
-      type: 'positive',
-      message: 'Signed out',
-      position: 'top',
-    });
-  } catch (err) {
-    $q.notify({
-      type: 'negative',
-      message: 'Failed to sign out',
-      position: 'top',
-    });
-  }
-};
+// const userIsPresent = computed(() => auth.currentUser !== null);
 
 const puvSelector = useDefaultPUVSelector();
 const $q = useQuasar();
@@ -223,6 +220,12 @@ watch(
 
     // Delete markers that are not in the list
     Object.keys(markersToDelete).forEach((key) => {
+      if (
+        key ===
+        `puv-${puvSelector.selectedPUV.value?.plateNumber.replaceAll(' ', '')}`
+      ) {
+        puvSelector.selectPUV(null);
+      }
       markersToDelete[key].remove();
       delete puvMarkers[key];
     });
