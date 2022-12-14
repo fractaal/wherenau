@@ -16,7 +16,7 @@
       <div class="h-[80vh]"></div>
       <transition name="bottom-drawer-transition">
         <div
-          class="lg:w-1/2 relative p-4 mx-8 lg:mx-auto pb-16 rounded-t-3xl shadow-xl border-2 border-gray-200 bg-[#ffffffbb] backdrop-blur-sm pt-6"
+          class="lg:w-1/2 relative p-2 mx-4 lg:mx-auto pb-16 rounded-t-3xl shadow-xl border-2 border-gray-200 bg-[#ffffffbb] backdrop-blur-sm pt-6"
           v-if="puvSelector.selectedPUV.value !== null"
         >
           <div
@@ -38,8 +38,8 @@
             <div
               class="bg-gray-100 rounded-xl p-4 flex flex-shrink flex-nowrap"
             >
-              <div class="text-gray-500">ROUTE &nbsp;</div>
-              <div class="font-black">
+              <div class="text-gray-500 text-xs">ROUTE &nbsp;</div>
+              <div class="font-black text-xs">
                 {{ puvSelector.selectedPUV.value.route }}
               </div>
             </div>
@@ -48,17 +48,17 @@
             <div
               class="flex flex-shrink bg-gray-100 rounded-xl p-4 flex-nowrap"
             >
-              <div class="text-gray-500">PLATE NUMBER &nbsp;</div>
-              <div class="font-black">
+              <div class="text-gray-500 text-xs">PLATE NUMBER &nbsp;</div>
+              <div class="font-black text-xs">
                 {{ puvSelector.selectedPUV.value.plateNumber }}
               </div>
             </div>
             <div
               class="flex flex-shrink bg-gray-100 rounded-xl p-4 flex-nowrap"
             >
-              <div class="text-gray-500">DISTANCE &nbsp;</div>
+              <div class="text-gray-500 text-xs">DISTANCE &nbsp;</div>
               <div
-                class="font-black"
+                class="font-black text-xs"
                 v-if="locationProvider.location.value !== null"
               >
                 {{

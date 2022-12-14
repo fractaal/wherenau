@@ -175,17 +175,25 @@ auth.onAuthStateChanged(async (user) => {
     // Get the current user's document from Firestore
     const db = getFirestore();
     const driverConfigRef = doc(collection(db, 'drivers'), user.uid);
+
     watch(
       driverConfig,
       async (newDriverConfig) => {
-        console.log("Updating driver's config");
-        status.value = 'updating';
+        let timeout: NodeJS.Timeout | null = null;
+        if (timeout) {
+          clearTimeout(timeout);
+        }
+        timeout = setTimeout(async () => {
+          console.log("Updating driver's config");
+          status.value = 'updating';
 
-        await setDoc(driverConfigRef, newDriverConfig, { merge: true });
-        status.value = 'idle';
+          await setDoc(driverConfigRef, newDriverConfig, { merge: true });
+          status.value = 'idle';
 
-        // Update the LocationBroadcaster
-        locationBroadcaster.broadcast.value = newDriverConfig.broadcastPosition;
+          // Update the LocationBroadcaster
+          locationBroadcaster.broadcast.value =
+            newDriverConfig.broadcastPosition;
+        }, 2000);
       },
       { deep: true }
     );
