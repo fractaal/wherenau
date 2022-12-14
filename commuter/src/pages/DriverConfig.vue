@@ -1,23 +1,93 @@
 <template>
   <q-page class="m-8 md:w-1/2 mx-4 md:mx-auto">
-    <q-toggle
-      v-model="driverConfig.broadcastPosition"
-      label="Broadcast My Position"
-    ></q-toggle>
+    <div class="ml-2">
+      <div class="flex" v-if="status == 'idle'">
+        <q-icon name="fas fa-check" class="mt-0.5 mr-1" />
+        OK
+      </div>
+      <div class="flex" v-else-if="status == 'updating'">
+        <q-spinner class="mr-1" />
+        UPDATING
+      </div>
+    </div>
+    <div class="relative mt-1">
+      <q-skeleton
+        animation="wave"
+        animation-speed="1500"
+        class="bg-[#00000011] absolute w-full h-full rounded-xl pointer-events-none"
+        v-if="driverConfig.broadcastPosition"
+      ></q-skeleton>
+      <div
+        class="font-black flex items-center border-2 p-4 rounded-xl"
+        :class="driverConfig.broadcastPosition ? 'bg-blue-500 text-white' : ''"
+        @click="
+          driverConfig.broadcastPosition = !driverConfig.broadcastPosition
+        "
+        v-ripple
+      >
+        <q-icon name="fas fa-satellite-dish" size="48px" />
+        <div v-if="!_locationBroadcaster.broadcast.value" class="ml-2">
+          NOT CURRENTLY BROADCASTING
+        </div>
+        <div v-else class="ml-2">BROADCASTING</div>
+      </div>
+    </div>
+    <div
+      v-if="_locationBroadcaster.broadcast.value"
+      class="bg-gray-200 rounded-md p-4 mt-4 flex"
+    >
+      <div class="bg-gray-300 p-4 rounded-md mb-2">
+        <span v-if="_locationBroadcaster.lastBroadcast.value === null">
+          Last Broadcast: Never
+        </span>
+        <span v-else>
+          Last Broadcast:
+          {{ _locationBroadcaster.lastBroadcast.value.toString() }}
+        </span>
+      </div>
+      <div class="grid grid-cols-2 w-full gap-4">
+        <div class="bg-gray-300 p-4 rounded-md">
+          <div class="text-gray-600">LNG</div>
+          <div class="font-black" f>
+            {{ locationProvider.location.value?.lng.toFixed(4) }}
+          </div>
+        </div>
+        <div class="bg-gray-300 p-4 rounded-md">
+          <div class="text-gray-600">LAT</div>
+          <div class="font-black">
+            {{ locationProvider.location.value?.lat.toFixed(4) }}
+          </div>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 w-full">
+        <q-btn
+          class="mt-2"
+          color="orange"
+          unelevated
+          label="Force Broadcast"
+          @click="_locationBroadcaster.forceBroadcast"
+        />
+      </div>
+    </div>
     <br />
     <div class="space-y-2">
       <q-input filled v-model="driverConfig.plateNumber" label="Plate Number" />
       <q-input filled v-model="driverConfig.name" label="Name" />
       <q-input filled v-model="driverConfig.route" label="Route" />
-      <q-input filled v-model="driverConfig.imageURL" label="Image URL" />
+      <q-input filled v-model="driverConfig.image" label="Image URL" />
+      <q-input
+        filled
+        v-model="driverConfig.color"
+        label="Color (Hexcode) e.g. #aabbcc"
+      />
     </div>
     <div class="tracking-wider font-black text-xs ml-2 mt-4">
       VEHICLE IMAGE PREVIEW
     </div>
     <q-img
-      :src="driverConfig.imageURL"
+      :src="driverConfig.image"
       alt="Preview"
-      height="300px"
+      height="150px"
       class="rounded-xl"
     />
     <div class="text-xs tracking-wider mt-4">
@@ -25,36 +95,6 @@
       Changes you make will be automagically saved
     </div>
     <br />
-    <div class="flex" v-if="status == 'idle'">
-      <q-icon name="fas fa-check" class="mt-1 mr-1" />
-      OK
-    </div>
-    <div class="flex" v-else-if="status == 'updating'">
-      <q-spinner class="mr-1" />
-      UPDATING
-    </div>
-    <div>
-      <div v-if="!_locationBroadcaster.broadcast.value">
-        NOT CURRENTLY BROADCASTING
-      </div>
-      <div v-else>
-        <div>BROADCASTING</div>
-        <div>
-          {{ locationProvider }}
-        </div>
-        <div v-if="_locationBroadcaster.lastBroadcast.value === null">
-          Last Broadcast Never
-        </div>
-        <div v-else>
-          Last Broadcast
-          {{ _locationBroadcaster.lastBroadcast.value.toString() }}
-        </div>
-        <q-btn
-          label="Force Broadcast"
-          @click="_locationBroadcaster.forceBroadcast"
-        />
-      </div>
-    </div>
   </q-page>
 </template>
 
@@ -97,7 +137,8 @@ const driverConfig = ref({
   plateNumber: '',
   name: '',
   route: '',
-  imageURL: '',
+  image: '',
+  color: '#0000ff',
 });
 
 auth.onAuthStateChanged(async (user) => {

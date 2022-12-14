@@ -13,7 +13,9 @@ import { Notify } from 'quasar';
 import Position from 'src/models/Position';
 import { computed, ref } from 'vue';
 
-export const useLocationProvider = () => {
+export const useLocationProvider = () => useDefaultLocationProvider();
+
+const _useLocationProvider = () => {
   const location = ref<Position | null>(null);
 
   const findingLocation = computed(() => location.value === null);
@@ -21,7 +23,6 @@ export const useLocationProvider = () => {
 
   // showToast('LOOKING FOR YOU...');
   const LocationCallback = (position: GeolocationPosition) => {
-    Notify.create({ message: 'update' });
     if (position !== null) {
       location.value = {
         lat: position.coords.latitude,
@@ -56,12 +57,12 @@ export const useLocationProvider = () => {
   };
 };
 
-let defaultLocationProvider: ReturnType<typeof useLocationProvider> | null =
+let defaultLocationProvider: ReturnType<typeof _useLocationProvider> | null =
   null;
 
 export function useDefaultLocationProvider() {
   if (defaultLocationProvider === null) {
-    defaultLocationProvider = useLocationProvider();
+    defaultLocationProvider = _useLocationProvider();
   }
 
   return defaultLocationProvider;

@@ -173,6 +173,8 @@ const puvMarkers: Record<string, maplibregl.Marker> = {};
 watch(
   puvLocationProvider.puvs,
   (puvs) => {
+    const markersToDelete = { ...puvMarkers };
+
     puvs.forEach((puv) => {
       const markerId = `puv-${puv.plateNumber.replaceAll(' ', '')}`;
 
@@ -214,6 +216,15 @@ watch(
           lat: puv.location.lat,
         });
       }
+
+      // Remove from markersToDelete
+      delete markersToDelete[markerId];
+    });
+
+    // Delete markers that are not in the list
+    Object.keys(markersToDelete).forEach((key) => {
+      markersToDelete[key].remove();
+      delete puvMarkers[key];
     });
   },
   { deep: true }

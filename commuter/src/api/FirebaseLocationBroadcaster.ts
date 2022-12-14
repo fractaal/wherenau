@@ -10,6 +10,7 @@ import {
 } from '@firebase/firestore';
 
 import { getAuth } from '@firebase/auth';
+import { Notify } from 'quasar';
 
 const auth = getAuth();
 
@@ -56,12 +57,12 @@ const _useLocationBroadcaster = (
     };
 
     // Update location in ref when location changes
-    watch(locationProvider.location, (newLocation) => {
+    setInterval(() => {
       if (broadcast.value) {
         setDoc(
           driverRef,
           {
-            location: newLocation,
+            location: locationProvider.location.value,
           },
           { merge: true }
         );
@@ -76,7 +77,7 @@ const _useLocationBroadcaster = (
           { merge: true }
         );
       }
-    });
+    }, 5000);
   }
 
   return {

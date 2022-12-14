@@ -1,7 +1,7 @@
 <template>
   <q-layout view="hHh lpR fFf">
     <q-header class="bg-white text-black">
-      <q-toolbar class="m-8">
+      <q-toolbar class="mt-6 lg:m-8">
         <q-btn
           icon="fas fa-backward"
           round
