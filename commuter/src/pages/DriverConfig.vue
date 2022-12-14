@@ -176,10 +176,11 @@ auth.onAuthStateChanged(async (user) => {
     const db = getFirestore();
     const driverConfigRef = doc(collection(db, 'drivers'), user.uid);
 
+    let timeout: NodeJS.Timeout | null = null;
+
     watch(
       driverConfig,
       async (newDriverConfig) => {
-        let timeout: NodeJS.Timeout | null = null;
         if (timeout) {
           clearTimeout(timeout);
         }
